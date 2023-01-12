@@ -1,0 +1,133 @@
+class GoldbachCalculator:
+ private:
+    procedure getPrimeNumbers(number):
+      declare vector<int> output
+      declare int* allnumbers = new int[number]
+      for counter = 0 to number do
+          allnumbers[counter] = counter+2
+      end for
+      for counter = 0 to number - 1 do
+          declare int actualNumber = allnumbers[counter]
+          if actualNumber != 0 then
+              output.push_back(actualNumber)
+              for equalizer to number - 1, equalizer += actualNumber, do
+                  allnumbers[equalizer] = 0
+              end for
+          end if
+      end for
+      delete[] allnumbers
+      return output
+    end procedure
+
+    procedure evenGoldbach(number, primes) 
+      declare gb_data_t* output = new gb_data_t()
+      declare vector<int64_t> sums
+      declare biggerCounter = primes.size() - 1
+      declare bigger = primes.at(biggerCounter)
+      declare minorCounter = 0
+      declare minor = primes.at(minorCounter)
+      //  While both parts dont crash each other
+      while minor <= bigger do
+          //  Goldbach sum found
+          if minor + bigger == number then
+              sums.push_back(minor)
+              sums.push_back(bigger)
+              try 
+                  biggerCounter--
+                  bigger = primes.at(biggerCounter)
+              catch (const std::out_of_range& oor) 
+                  minorCounter++
+                  minor = primes.at(minorCounter)
+          else 
+              if minor + bigger > number then
+                  try 
+                      biggerCounter--
+                      bigger = primes.at(biggerCounter)
+                  catch (const std::out_of_range& oor) 
+                      minorCounter++
+                      minor = primes.at(minorCounter)
+              else 
+                  try 
+                      minorCounter++
+                      minor = primes.at(minorCounter)
+                  catch (const std::out_of_range& oor) 
+                      biggerCounter--
+                      bigger = primes.at(biggerCounter)
+              end if
+          end if 
+
+      output->totalAddends = (sums.size()) / 2
+      output->goldbachAddends = sums
+      return output
+    end procedure
+
+
+    procedure oddGoldbach(number, primes) 
+      declare gb_data_t* output = new gb_data_t()
+      declare vector<int64_t> sums
+      for counter = 0 to primes.size() do
+          int minor = primes.at(counter)
+          int mediumCounter = counter
+          int medium = primes.at(mediumCounter)
+          int biggerCounter = primes.size() - 1
+          int bigger = primes.at(biggerCounter)
+          while medium <= bigger do
+              if minor + medium + bigger == number then
+                  sums.push_back(minor)
+                  sums.push_back(medium)
+                  sums.push_back(bigger)
+                  biggerCounter--
+                  bigger = primes.at(biggerCounter)
+              else 
+                  if minor + medium + bigger > number then
+                      biggerCounter--
+                      bigger = primes.at(biggerCounter)
+                  else 
+                      mediumCounter++
+                      medium = primes.at(mediumCounter)
+                  end if
+              end if
+          end while
+      end for
+      output->totalAddends = (sums.size()) / 3
+      output->goldbachAddends = sums
+      return output
+    end procedure
+
+
+ public:
+    procedure getInstance():
+      declare static GoldbachCalculator instance
+      return a reference to instance
+    end procedure
+
+    procedure goldbachUnitSolver():
+      if entry <= 3 OR entry == 5:
+        output.number := input.number
+        output.format := 0
+        output.totalAddends := 0
+        output.goldbachAddends := vector0
+        output.packetTotal := input.packetTotal
+        output.requestID := input.requestID
+      else:
+        primeNumbers = primeNumbers(input.number)
+        if number % 2 == 0:
+          output := evenGoldbach()
+          output.format := 2
+        else:
+          output := oddGoldbach()
+          output.format := 3
+        end if condition
+        output.number := input.number
+        output.packetTotal := input.packetTotal
+        output.requestID := input.requestID
+      end if condition
+      delete input
+      return output
+    end procedure
+      
+
+
+
+
+

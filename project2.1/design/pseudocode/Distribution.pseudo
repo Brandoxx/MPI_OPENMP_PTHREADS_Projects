@@ -1,0 +1,138 @@
+procedure sendHeatPlate():
+  MPI_Send(heatPI->rows, tag := 0)
+  MPI_Send(heatPI->cols, tag := 1)
+  MPI_Send(heatPI->deltaT, tag := 2)
+  MPI_Send(heatPI->thermalDiffusivity, tag := 3)
+  MPI_Send(heatPI->cellDimension, tag := 4)
+  MPI_Send(heatPI->epsilon, tag := 5)
+  MPI_Send(heat->plateName.size(), tag := 6)
+  MPI_Send(heatPI->plateName, tag := 6)
+  MPI_Send(heatPI->matrix, tag := 7)
+end procedure sendHeatPlate
+
+procedure receiveHeatPlate():
+  MPI_Recv(heatPI->rows, tag := 0, source := 0)
+  MPI_Recv(heatPI->cols, tag := 1, source := 0)
+  MPI_Recv(heatPI->deltaT, tag := 2, source := 0)
+  MPI_Recv(heatPI->thermalDiffusivity, tag := 3, source := 0)
+  MPI_Recv(heatPI->cellDimension, tag := 4, source := 0)
+  MPI_Recv(heatPI->epsilon, tag := 5, source := 0)
+  MPI_Recv(heat->plateName.size(), tag := 6, source := 0)
+  MPI_Recv(heatPI->plateName, tag := 6, source := 0)
+  MPI_Recv(buffer, tag := 7, source := 0)
+  bufferToMatrix(buffer, matrix)
+  heatPI->auxMatrix = heatPI->matrix
+end procedure receiveHeatPlate
+
+procedure startDistribution():
+  if MPI_Init(argc, argv) == MPI_SUCCESS :
+    MPI_rank(processNumber)
+    MPI_size(processCount)
+    processorName := {}
+    nameLenght := -1
+  end ifCondition
+
+  if processCount == 1
+    jobFileName := argv[1]
+    runSimulation(jobFileName)
+  end ifCondition
+end procedure startDistribution
+
+procedure distributeHeatPlates(plates, processCount):
+  plateId := plates.size()
+  processRequestNumber := 0
+
+  while plateId > 0:
+    MPI_Recv(processRequestNumber, tag := 10, source := any)
+    MPI_Send(plateId, tag := 11)
+    sendHeatPlate(plates[plateId], processRequestNumber)
+    --plateId
+  end whileLoop
+
+    for process < processCount:
+      MPI_Send(plateId, target := process, tag := 10)
+    end forLoop
+end procedure distributeHeatPlates
+
+procedure receiveHeatPlates():
+  plateId := 0
+
+  while plateId != -1:
+    MPI_Send(processNumber, tag := 10)
+    MPI_Recv(plateId, tag := 11, source := 0)
+    heatPI = new heatPlate()
+    receiveHeatPlate(heatPI, 0)
+    simulate(heatPI)
+    plates.pushback(heatPI)
+  end whileLoop
+end procedure
+
+procedure sendResults():
+  MPI_Recv(processNumber, tag := 12, source := 0)
+  plateCount := plates.size()
+  MPI_Send(plateCount, tag := 13; source := 0)
+
+  for i < plateCount:
+    MPI_Send(plate[i]->heatPlateNumber, tag := 14, source := 0)
+    sendHeatPlateResults(plate[i], 0)
+  end forLoop
+end procedure sendResults
+
+procedure receiveResults():
+  for process < processCount:
+    MPI_Send(processNumber, tag := 12, target := process)
+    plateCount := 0
+    MPI_Recv(plateCount, tag := 13, source := process)
+    
+    for i < plateCount:
+      id := 0
+      MPI_Recv(id, tag := 14, source := process)
+      receiveHeatPlateResults()
+    end forLoop
+  end forLoop
+end procedure receiveResults
+
+procedure runDistSimulation():
+  if processNumber == 0:
+    plates := getPlates(jobFileName)
+    report(jobFileName)
+    print(path)
+    for i < plates.size():
+      plateInfo := plates[i]
+      parameters := getSimulationParameters(plateInfo)
+      heatPlates.pushback(heatPI)
+      parametersVector.pushback(parameters)
+    end forLoop
+
+    distributeHeatPlates(heatPlates, processCount)
+    receiveResults(heatPlates, processCount)
+
+    for i < heatPlates.size():
+      parameters := parametersVector[i]
+      heatPI := heatPlates[i]
+      report.writeRow(parameters)
+      report.writeResults(heatPI->timeElapsed)
+      binaryMatrixWriter(outputPath, heatPI->currentMatrix)
+    end forLoop
+  else:
+    receiveHeatPlates(heatPlates, processNumber)
+    sendResults(heatPlates, processNumber)
+  end ifCondition
+end procedure runDistSimulation
+
+procedure receiveHeatPlateResults():
+  MPI_Recv(heatPI->generation, tag := 14, source := source)
+  MPI_Recv(buffer[0], tag := 15, source := source)
+  index := 0
+  for i < heatPI->rows:
+    for j < heatPI->cols:
+      heatPI->currentMatrix[i][j] = buffer[index]
+      index++
+    end forLoop
+  end forLoop
+end procedure receiveHeatPlate
+
+procedure sendHeatPlateResults():
+  MPI_Send(heatPI->generation, tag := 14, target := desti)
+  MPI_Send(heatPI->matrix[0][0], tag := 15, target := desti)
+end procedure

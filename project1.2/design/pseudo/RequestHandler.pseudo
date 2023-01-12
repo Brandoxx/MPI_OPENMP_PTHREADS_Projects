@@ -1,0 +1,51 @@
+class RequestHandler: as Consumer clientRequest: 
+  public:
+     procedure createRequestHandler()
+     procedure destroyRequestHandler()
+     procedure consumeForever():
+      while true do:
+        clientRequest data := consumingQueue.dequeue();
+        if data = stopCondition then:
+          for each queue in toQueues:
+              send stopCondition to queue
+          end for
+          break;
+        end if
+        consume(data);
+      end while
+     end procedure
+
+     procedure consume(clientRequest data):
+      int key := extractKey(data)
+      iterator i := toQueues.find(key)
+      if i = toQueues.tail():
+          report error "dispatcher: queue's key not found"
+      end if
+      toQueues.find(key).getQueue().push(data)
+     end procedure
+
+     procedure registerRedirect(int key, Queue of clientRequest toQueue):
+       toQueues[key] = toQueue;
+     end procedure
+ 
+  private:
+    
+    procedure extractKey(clientRequest data):
+      if data.request.getURI().rfind("/", 0) = 0 then:
+        return 1;
+      else:
+        report error "Invalid URI";
+      end if
+    end procedure
+
+     declare toQueues := a map with int keys and Queue of clientRequest as data
+ 
+  protected:
+
+   procedure run():
+    consumeForever();
+    return 0;
+   end procedure
+
+end RequestHandler
+ 

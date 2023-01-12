@@ -1,0 +1,38 @@
+class GoldbachSolvers :
+    copies of GoldbachSolvers are not allowed
+
+ protected:
+    Goldbach goldbach
+    gb_data_t stopCondition := nullptr
+
+ public:
+    procedure createGoldbachSolvers():
+        this->goldbach = getCalculatorInstance()
+    end procedure
+
+    procedure destroyGoldbachSolvers()
+    
+    procedure run():
+        consumeForever()
+    end procedure
+
+    procedure consume():
+        if package != nullptr then
+            produce(stopCondition)
+        else
+            output := goldbachUnitSolver()
+            produce(output)
+        end if
+    end procedure
+
+    procedure consumeForever():
+        while true do
+            data = consumingQueue.pop()
+            if data == nullptr then
+                consume(nullptr)
+                break
+            end if
+            consume(data)
+        end whileloop
+    end procedure 
+end class

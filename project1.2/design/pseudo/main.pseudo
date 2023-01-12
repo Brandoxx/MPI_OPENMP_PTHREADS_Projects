@@ -1,0 +1,6 @@
+procedure main(argc, argv):
+  declare a unique instance of a GoldbachWebApp := getInstance()
+  declare a unique instance of a Server := getInstance()
+  chainWebApp(GoldbachWebApp)
+  Server.start(argc, argv)
+end main

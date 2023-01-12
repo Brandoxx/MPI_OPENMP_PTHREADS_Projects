@@ -1,0 +1,56 @@
+class HttpDispatcher:
+ private:
+    procedure serveHomepage():
+      response.setHeader()
+      response.body := buildBodyResponse()
+      send(response)
+    end procedure serveHomePage
+
+    procedure serveGoldbachAddends():
+      printGoldbachSums()
+      response.body := serveGoldbachResponse()
+      send(response)
+    end procedure serveGoldbachAddends
+
+    procedure serveGoldbachResponse():
+      outputString := buildBodyResponse()
+      for index < goldbachResult.size() :
+      outputString := appendBodyResults(goldbachResult[index])
+      end forloop
+      return outputString
+    end procedure serveGoldbachResponse
+
+    procedure serveInvalidRequest():
+      response.body := buildBodyInvalid()
+      send(response)
+    end procedure serveInvalidRequest
+
+    procedure serveOutofBounds():
+      response.body := buildBodyOutBounds()
+      send(response)
+    end procedure serveOutofBounds
+
+  public:
+    procedure createHttpDispatcher()
+    procedure destroyHttpDispatcher()
+
+    procedure consume():
+      if packetTotal > 0 then
+        serveGoldbachAddends(data)
+      else if packetTotal == -1
+        serveInvalidRequest(data)
+      else if packetTotal == -2
+        serveOutofBounds(data)
+      else if packetTotal == -3
+        serveHomePage(data)
+      end if
+
+      delete data[0]
+      delete results
+    end procedure consume
+
+    procedure run():
+      consumeForever()
+      return 0
+    end procedure run
+    

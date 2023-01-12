@@ -1,0 +1,59 @@
+procedure heatPlate():
+  this->epsilon := inputEpsilon
+  this->thermalDiffusivity := inputTherDiff
+  this->cellDimension := inputCellDiff
+  this->deltaT := inputDeltaT
+end procedure heatPlate
+
+procedure heatPlate():
+  FileManager(input)
+  this->deltaT := parameter[1]
+  this->thermalDiffusivity := parameter[2]
+  this->cellDimension := parameter[3]
+  this->epsilon := parameter[4]
+end procedure heatPlate
+
+procedure setHeatPlateAttribute():
+  this->rows := rows
+  this->cols := cols
+  this->matrix := matrix
+  this->auxMatrix := matrix
+end procedure setHeatPlateAttribute
+
+procedure updateGeneration():
+  #pragma omp parallel for collapse reduction(max:maxChange)
+  for (row < rows) do:
+    for (col < cols) do:
+      updateCell(row, col)
+    
+      if change > maxChange do:
+        maxChange = change
+      end ifCondition
+    end forLoop
+  end for
+end procedure updateGeneration
+
+procedure updateCell():
+  nextMatrix = formula()
+  return nextMatrix - currentMatrix
+end procedure updateCell
+
+procedure simulate():
+  currentMatrix := matrix
+  nextMatrix:= auxMatrix
+  deltaDiff := 0.0
+  while (deltaDiff > epsilon) {
+    deltaDif = updateGeneration()
+  }
+
+  getResults()
+end procedure simulate
+
+procedure runSimulation()
+  platesInJobFile()
+  for (i < plates.size()):
+    createPlate()
+    simulate()
+    writeResults()
+  end forLoop
+end procedure runSimulation

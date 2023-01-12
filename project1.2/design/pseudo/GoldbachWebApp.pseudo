@@ -1,0 +1,197 @@
+class GoldbachWebApp : as App:
+  copies of GoldbachWebApp are not allowed
+
+ private:
+  declare packer := as a GoldbachPacker 
+  declare dispatcher := as a Dispatcher
+  int solverCount
+  declare solvers := as an Array of Solvers
+  declare solverInputQueue := as a Queue of gb_data_t
+  declare solverOutputQueue := as a Queue of gb_data_t
+  declare packerOutputQueue := as a Queue of arrays of gb_data_t
+
+ public:
+  procedure createGoldbachWebApp()
+  procedure destroyGoldbachWebApp()
+
+  procedure getInstance():
+    declare static WebServer instance
+    return a reference to instance
+  end procedure
+
+  procedure run():
+    start()
+    return 0
+  end procedure
+
+  procedure start():
+    packer := as new GoldbachPacker
+    dispatcher := as new HttpDispatcher
+    solverOutputQueue := as new Queue of gb_data_t
+    packerOutputQueue := as new Queue an Array of gb_data_t\
+
+    setOwnProducingQueue()
+
+    solverCount := get
+    for i := 1...solverCount: 
+      GoldbachSolvers solver = as new GoldbachSolvers(solverInputQueue, solverOutputQueue)
+      solver.startThread();
+      this->solvers.push_back(solver);
+    end for 
+    
+    packer.setConsumingQueue(solverOutputQueue)
+    packer.setProducingQueue(packerOutputQueue)
+    packer.startThread()
+
+    this->dispatcher->setConsumingQueue(packerOutputQueue);
+    this->dispatcher->startThread();
+    this->consumeForever();
+    
+    for i := 1...solverCount: 
+      solverInputQueue.push(nullptr)
+    end for
+
+    for i:= 1...solverCount: 
+      solvers[index].waitToFinish()
+      delete solvers[index]
+    end for
+   
+    packer.waitToFinish();
+    dispatcher.waitToFinish();
+    delete solverOutputQueue
+    delete packerOutputQueue
+    delete solverInputQueue
+    delete packer
+    delete dispatcher
+  end procedure
+ 
+  procedure handleClientRequest(clientRequest request):
+    Response response := request.response
+    Request Request := request.request
+    if request.getMethod() = "GET" and request.getURI() = "/" :  
+      return serveHomePage(request);
+    end if
+    if request.getURI().rfind("/Goldbach", 0) = 0:
+      return this->serveGoldbach(request)
+    end if
+    return false
+  end procedure
+
+  procedure consume(clientRequest request):
+    handleClientRequest(request);
+  end procedure
+
+  procedure consumeForever():
+    while true do:
+      clientRequest request := consumingQueue.dequeue()
+      if request = stopCondition then:
+        break
+      else:
+        handleClientRequest(request)
+      end if
+    end while
+  end procedure
+
+  procedure stop():
+  
+  end procedure
+
+  procedure setOwnProducingQueue():
+    solverInputQueue := as new Queue of gb_data_t
+  end procedure
+  procedure getSolversOutputQueue():
+    return solverOutputQueue
+  end procedure
+
+
+ protected:
+
+  procedure getSolverCount():
+    return solverCount
+  end procedure
+
+  procedure analyzeURI(string URI):
+    pair reaction := {0, Array of ints}
+    for i := 1 < URI.length():
+      if URI[index] := ',':
+        URI.replace(index, 1, "%2C");
+      end if
+    end for
+    smatch matches
+    regex inQuery("^/Goldbach(/|\\?number=)([+-]?\\d+(%2C[+-]?\\d+)*)$")
+    if regex_search(URI, matches, inQuery):
+      assert(matches.length() >= 3);
+      string numberString := matches[2];
+      size_t numberEndIndex := 0;
+      std::string tempString := "";
+      while numberEndIndex = numberString.find("%2C")) != string::npos do:
+        tempString := numberString.substr(0, numberEndIndex)
+        try:
+          (reaction.second).add(as int numberString)
+        catch:
+          report error "Invalid number in URI"
+        end try
+        numberString.erase(0, numberEndIndex + 3)
+      try:
+        (reaction.second).add(as int numberString)
+      catch:
+        report error "Invalid number in URI"
+      end try
+      
+      if (reaction.second).empty() then:
+        reaction.first := -2
+      else:
+        reaction.first := 0
+      else:
+        reaction.first := -1
+      end if
+    return reaction
+  end procedure
+
+  procedure serveGoldbach(clientRequest request):
+    Response response := request.response
+    Request request := request.request
+    
+    httpResponse.setHeader("Server", "AttoServer v1.0")
+    httpResponse.setHeader("Content-type", "text/html; charset=ascii")
+    
+    string URI := httpRequest.getURI()
+    
+    bool response := false;
+    set reaction = analyzeURI(URI)
+  
+    if reaction.first = 0:
+      for i := 1 ... reaction.second.size():
+        int64_t number := reaction.second[index]
+        gb_data_t data := as new gb_data_t()
+        data.requestID := request
+        data.number := number
+        data.packetTotal := reaction.second.size()
+        solverInputQueue.enqueue(data)
+      end for
+    else if reaction.first = -1 :
+        gb_data_t data := as new gb_data_t()
+        data.requestID := request
+        data.number := 1
+        data.packetTotal := -1
+        solverInputQueue.enqueue(data)
+    else if reaction.first = -2:
+        gb_data_t data := as new gb_data_t()
+        data.requestID := request
+        data.number := 1
+        data.packetTotal := -2
+        solverInputQueue.enqueue(data)
+    end if 
+    return response
+  end procedure
+
+  procedure serveHomePage(clientRequest request):
+    gb_data_t data := as new gb_data_t()
+    data.requestID = request
+    data.number := 1
+    data.packetTotal := -3
+    solverInputQueue.enqueue(data)
+    return 0;
+  end procedure
+  
+end class

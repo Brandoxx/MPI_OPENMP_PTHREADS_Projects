@@ -1,0 +1,56 @@
+class ConnectionHandler: as Consumer of Sockets: 
+  copies of ConnectionHandler are not allowed
+
+ protected:
+  declare applications := as an Array of App
+  declare clientRequests := as a Queue of clientRequest
+
+ public:
+
+  procedure createConnectionHandler()
+  procedure destroyConnectionHandler()
+
+  procedure run():
+    consumeForever()
+    send a stop signal to the requestHandler
+    return success
+  end procedure
+
+  procedure consume(Socket socket):
+    while true do:
+      Request request := as new HttpRequest from socket
+      if request.parse() is not valid then:
+        delete httpRequest;
+        break 
+      end if
+
+      Response response := new HttpResponse(client);
+      enqueueClientRequest(request, response)
+
+    end while
+  end procedure
+
+  procedure setApplications(Array of Apps applications):
+
+  procedure setOwnClientRequests():
+    set clientRequests := as new Queue of clientRequest
+  end procedure
+  
+  procedure setClientRequests(Queue of clientRequest Requests):
+    set clientRequests := Requests
+  end procedure
+
+ 
+  procedure getClientRequests():
+    return clientRequests
+  end procedure
+
+private:
+  procedure enqueueClientRequest(Request request, Response response):
+    clientRequest newRequest := as new clientRequest
+    newRequest.request := request;
+    newRequest.response := response;
+    clientRequests.enqueue(newRequest)
+  end procedure
+
+end ConnectionHandler

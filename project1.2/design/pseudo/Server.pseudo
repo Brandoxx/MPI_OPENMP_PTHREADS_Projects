@@ -1,0 +1,135 @@
+procedure signalHandler(int signum)
+
+
+class Server:
+  no copies of Server are allowed
+
+ protected:
+  declare struct addrinfo hints
+ 
+  string ConnectionPort = DEFAULT_PORT
+
+  int connectionHandlers = getAmoutOfCores()
+  declare handlers := as an array of ConnectionHandlers
+  declare applications := as an array of Apps
+  declare socketQueue := as a Queue of Sockets
+  declare a RequestHandler := as a RequestHandler
+
+  public:
+    procedure getInstance():
+      declare static Server instance
+      return a reference to instance
+    end procedure
+   
+    chainWebApp(App application):
+      applications.add(application)
+    end procedure
+    
+    procedure start(argc, argv):
+      declare a requestsQueue := as a Queue of clientRequest
+      bool flag stopApps := false
+      listen_signals(SIGINT, signalHandler)
+      listen_signals(SIGTERM, signalHandler)
+
+      try: // check if in arguments there is a port
+
+        if analyzeArguments(argc, argv) = true then:
+
+          Log.start() to report
+          set socketQueue := as new Queue of Sockets
+          set requestsQueue := as new Queue of clientRequest
+
+          for i := 1...connectionHandlers:
+            ConnectionHandler handler := as new ConnectionHandler
+            handler.setConsumingQueue(socketQueue)
+            handler.setApplications(tapplications)
+            handler.setClientRequests(requestsQueue)
+            handler.startThread()
+            handler.add(handler)
+          end for
+
+          set RequestHandler := as new RequestHandler
+          RequestHandler.setConsumingQueue(requestsQueue)
+          RequestHandler.startThread()
+
+          for i := 1...applications.size():
+            declare newQueue := as new Queue of clientRequests
+            applications[i].setConsumingQueue(newQueue)
+            applications[i].startThread()
+            httpRequestHandler.registerRedirect(i + 1, newQueue)
+          end for 
+          stopApps = true
+    
+          listenForConnections(port)
+          Address address = getNetworkAddress()
+          Log::report(Log::INFO, "webserver", "Listening on " + address.getIP()
+            + " port " + std::to_string(address.getPort()))
+          acceptAllConnections()
+        end if
+      catch runtime_error error:
+        report error
+      end try
+    
+      if stopApps = true then: 
+        
+        for i := 1...connectionHandlers:
+          send a stop signal to handlers
+        end for 
+        
+        for i := 1...applications.size():
+          applications[i].waitToFinish()
+          delete applications.getConsumingQueue():
+        end for
+
+        for i := 1...connectionHandlers:
+          handlers[i].waitToFinish()
+          delete this.handlers[i]
+        end for
+        RequestHandler.waitToFinish()
+      end if 
+
+      delete requestsQueue
+      delete socketQueue
+      delete RequestHandler
+  
+      Log.stop()
+      return success
+    end procedure
+ 
+    procedure stop():
+      set flag isClosed := true
+      stopListening()
+    end procedure
+
+    procedure listenForever(string port):
+      return TcpServer::listenForever(port)
+    end procedure
+
+ private:
+    procedure analyzeArguments(int argc, Array argv):
+      for i := 1...argc:
+        const string argument := argv[index]
+        if argument is "help" then:
+          print "usage"
+          return false
+        end if
+      if argc >= 2 then:
+        port := argv[1]
+      end if
+      if argc >= 3:
+        connectionHandlers := as int argv[2]
+      end if
+      return true
+    end procedure
+
+
+    procedure handleClientConnection(Socket client):
+      print "new connection" 
+      socketQueue.enqueue(client)
+    end procedure
+
+    procedure create_Server()
+
+    procedure destroy_Server()
+    
+end class

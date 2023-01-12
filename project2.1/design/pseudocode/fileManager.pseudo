@@ -1,0 +1,55 @@
+procedure readMatrix(heatPI, filename, binary):
+  if !file is open:
+    throw error
+  else:
+    file.read((char*)&rows, 8)
+    file.read((char*)&cols, 8)
+    heatPI->setHeatPlateAtribute
+    for (row < rows):
+      for (col < cols):
+        file.read(&number, 8)
+        heatPI->matrix[row][col] = number
+      end forLoop
+    end forLoop
+    file.close()
+  end ifCondition
+end procedure readMatrix
+
+procedure getPlates(filename):
+  filename.open()
+  if !file.open():
+    throw error
+  else :
+    while getline(file, line):
+      plates.pushback(line)
+    end whileLoop
+    file.close()
+  end ifCondition
+  return plates
+end procedure getPlates
+
+procedure getSimulateParameters(plateInfo):
+  for i < size:
+    if plateInfo[i] != separator:
+      temp += plateInfo[i]
+    else :
+      if !temp.empty() :
+        parameters.pushback(temp)
+      end ifCondition
+      temp.clear()
+    end ifCondition
+  end forLoop
+
+  if !temp.empty() :
+    parameters.pushback(temp)
+  end ifCondition
+
+  return parameters
+end procedure getSimulateParameters
+
+procedure cleanExtension(filename, extension):
+  pos := filename.find(extension)
+  if (pos != npos) :
+    filename.erase(pos, extSize)
+  end ifCondition
+end procedure cleanExtension

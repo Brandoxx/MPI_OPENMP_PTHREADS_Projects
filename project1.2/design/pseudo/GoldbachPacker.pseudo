@@ -1,0 +1,49 @@
+class GoldbachPacker :
+
+ private:
+    map<clientRequest, vector<gb_data_t*>*> vectorMap
+    
+    procedure getVector():
+      result := vectorMap.find()
+      if result == vectorMap.end() then
+        queue = new Queue()
+        vectorMap[user] = queue
+      end if
+      return result
+    end procedure 
+
+    procedure isComplete():
+      if numbers.size() == data->packetTotal then
+        return true
+      end if
+      return false
+    end procedure 
+
+  public:
+    procedure createGoldbachPackers()
+    procedure destroyGoldbachPackers()
+
+    procedure consume():
+      if packetTotal < 0 then
+        vec = new vector
+        procedure produce(vec)
+      else
+        vec = getVector(requestID)
+        vec.push_back(data)
+        if procedure isComplete(*vec, data) :
+          procedure produce(*vec)
+          ~vec()
+          vectorMap.erase(requestID)
+        end ifcondition
+      end ifcondition
+    end procedure 
+
+    procedure run():
+      solverCount := getThreadNumber()
+      for index = 0 to solverCount do
+        procedure consumeForever()
+      end for
+      producingQueue.push(vector<gb_data_t>)
+      return 0
+    end procedure 
+end GoldbachPacker
